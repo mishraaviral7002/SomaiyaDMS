@@ -1,10 +1,32 @@
 import sqlite3
 import os
+import shutil
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'somaiyasat.db')
+def get_db_path():
+    app_dir = os.path.dirname(__file__) or '.'
+    is_read_only = not os.access(app_dir, os.W_OK)
+    is_cloud = any(k in os.environ for k in ('VERCEL', 'VERCEL_ENV', 'AWS_LAMBDA_FUNCTION_NAME', 'LAMBDA_TASK_ROOT'))
+    
+    if is_cloud or is_read_only:
+        tmp_db = '/tmp/somaiyasat.db'
+        bundled_db = os.path.join(app_dir, 'somaiyasat.db')
+        if not os.path.exists(tmp_db):
+            if os.path.exists(bundled_db):
+                try:
+                    shutil.copyfile(bundled_db, tmp_db)
+                except Exception:
+                    pass
+        if os.path.exists(tmp_db):
+            try:
+                os.chmod(tmp_db, 0o666)
+            except Exception:
+                pass
+        return tmp_db
+    return os.path.join(app_dir, 'somaiyasat.db')
+
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     cursor = conn.cursor()
 
     # Enable Foreign Key Support
@@ -111,7 +133,7 @@ def init_db():
     conn.close()
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
