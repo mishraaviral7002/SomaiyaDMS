@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Architecture & Visualization | SomaiyaSat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Mermaid.js for interactive ER Diagram -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      fontFamily: 'JetBrains Mono'
+    });
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              500: '#f97316',
+              600: '#ea580c', // Burnt Orange
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-stone-50 text-stone-900 min-h-screen font-sans antialiased flex flex-col">
+
+  <!-- Top Navigation -->
+  <nav class="bg-white border-b border-stone-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-8">
+        <a href="/" class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+            S
+          </div>
+          <div>
+            <span class="font-bold text-stone-900 tracking-tight text-base block leading-tight">SomaiyaSat</span>
+            <span class="text-xs text-stone-500 font-medium">Mission Control System</span>
+          </div>
+        </a>
+        <div class="hidden md:flex space-x-1">
+          <a href="/" class="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors">Operations</a>
+          <a href="/database-view" class="px-3 py-1.5 text-sm font-semibold text-brand-700 bg-brand-50 rounded-md border border-brand-200">Database Schema & Tables</a>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <a href="/" class="text-xs font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 px-3 py-1.5 rounded border border-brand-200">&larr; Back to Dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-10">
+
+    <!-- Header Section -->
+    <div>
+      <h1 class="text-2xl font-bold text-stone-900">Database Architecture & Visual Schema</h1>
+      <p class="text-sm text-stone-500 mt-1">Direct visualization of normalized relational tables, ER relationships, integrity constraints, triggers, and indices.</p>
+    </div>
+
+    <!-- 1. Interactive ER Diagram (Entity-Relationship) -->
+    <div class="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-6">
+        <div>
+          <h2 class="text-base font-bold text-stone-900">Entity-Relationship (E-R) Diagram</h2>
+          <p class="text-xs text-stone-500">Visual mapping of 3NF relational schemas with primary and foreign keys.</p>
+        </div>
+        <span class="px-2.5 py-1 text-xs font-semibold rounded bg-stone-100 text-stone-700 font-mono">Mermaid.js Render</span>
+      </div>
+
+      <div class="overflow-x-auto flex justify-center py-4 bg-stone-50/50 rounded-lg border border-stone-100">
+        <pre class="mermaid text-xs">
+erDiagram
+    DEPLOYER ||--o{ SATELLITE : "ejects / houses"
+    SATELLITE ||--o{ TELEMETRY : "records"
+    SATELLITE ||--o{ TRANSMISSION_QUEUE : "schedules"
+
+    DEPLOYER {
+        int deployer_id PK
+        string pod_name
+        string ejection_status "Locked | Armed | Ejected"
+        timestamp ejection_time
+    }
+
+    SATELLITE {
+        int sat_id PK
+        int deployer_id FK
+        string callsign UK
+        string operational_status "Dormant | Active | SafeMode"
+    }
+
+    TELEMETRY {
+        int telemetry_id PK
+        int sat_id FK
+        real battery_pct "CHECK(0..100)"
+        real solar_voltage "CHECK(>=0)"
+        real temperature
+        timestamp recorded_at
+    }
+
+    TRANSMISSION_QUEUE {
+        int packet_id PK
+        int sat_id FK
+        string mode "M17 | Codec2 | SSTV | TTC"
+        string payload_data
+        string priority "Low | Med | High | Crit"
+        string status "Pending | Transmitted"
+        timestamp created_at
+    }
+        </pre>
+      </div>
+    </div>
+
+    <!-- 2. Schema Structure Metadata (PRAGMA table_info) -->
+    <div class="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+      <div class="border-b border-stone-100 pb-3 mb-6">
+        <h2 class="text-base font-bold text-stone-900">Relational Table Schemas (DDL Definitions)</h2>
+        <p class="text-xs text-stone-500">Field types, nullable attributes, primary keys, and default values.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for table_name, columns in schema_info.items() %}
+        <div class="border border-stone-200 rounded-lg overflow-hidden">
+          <div class="bg-stone-100 px-4 py-2 border-b border-stone-200 flex justify-between items-center">
+            <span class="font-mono text-xs font-bold text-brand-700">TABLE {{ table_name }}</span>
+            <span class="text-[11px] text-stone-500">{{ columns|length }} attributes</span>
+          </div>
+          <table class="w-full text-left text-xs">
+            <thead class="bg-stone-50 text-stone-500 font-medium border-b border-stone-100">
+              <tr>
+                <th class="p-2">Column</th>
+                <th class="p-2">Type</th>
+                <th class="p-2">Key</th>
+                <th class="p-2">Nullable</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 font-mono text-[11px]">
+              {% for col in columns %}
+              <tr>
+                <td class="p-2 font-semibold text-stone-800">{{ col[1] }}</td>
+                <td class="p-2 text-stone-600">{{ col[2] }}</td>
+                <td class="p-2">
+                  {% if col[5] == 1 %}
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">PK</span>
+                  {% elif 'id' in col[1] and col[5] == 0 %}
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800">FK</span>
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td class="p-2 text-stone-500">{% if col[3] == 1 %}No{% else %}Yes{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 3. Advanced DBMS Features (Triggers, Views, Indexes) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Triggers -->
+      <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+        <h3 class="text-sm font-bold text-stone-900 border-b border-stone-100 pb-2">Active Triggers</h3>
+        <div class="mt-3 space-y-3">
+          {% for trig in triggers %}
+          <div>
+            <p class="font-mono text-xs font-semibold text-brand-700">{{ trig['name'] }}</p>
+            <pre class="bg-stone-50 p-2.5 rounded border border-stone-200 text-[10px] text-stone-700 font-mono mt-1 overflow-x-auto whitespace-pre-wrap">{{ trig['sql'] }}</pre>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Views -->
+      <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+        <h3 class="text-sm font-bold text-stone-900 border-b border-stone-100 pb-2">Materialized Views</h3>
+        <div class="mt-3 space-y-3">
+          {% for view in views %}
+          <div>
+            <p class="font-mono text-xs font-semibold text-brand-700">{{ view['name'] }}</p>
+            <pre class="bg-stone-50 p-2.5 rounded border border-stone-200 text-[10px] text-stone-700 font-mono mt-1 overflow-x-auto whitespace-pre-wrap">{{ view['sql'] }}</pre>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Indexes -->
+      <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+        <h3 class="text-sm font-bold text-stone-900 border-b border-stone-100 pb-2">B-Tree Indexes</h3>
+        <div class="mt-3 space-y-3">
+          {% for idx in indexes %}
+          <div>
+            <p class="font-mono text-xs font-semibold text-brand-700">{{ idx['name'] }}</p>
+            <p class="text-[11px] text-stone-500">Target Table: <span class="font-semibold text-stone-700">{{ idx['tbl_name'] }}</span></p>
+            <pre class="bg-stone-50 p-2.5 rounded border border-stone-200 text-[10px] text-stone-700 font-mono mt-1 overflow-x-auto whitespace-pre-wrap">{{ idx['sql'] }}</pre>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. Raw Tables Explorer -->
+    <div class="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+      <div class="border-b border-stone-100 pb-3 mb-4">
+        <h2 class="text-base font-bold text-stone-900">Live Database Instance Data</h2>
+        <p class="text-xs text-stone-500">Current record instances stored inside SQLite tables.</p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Telemetry Data -->
+        <div>
+          <h4 class="text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">Table: telemetry (All rows)</h4>
+          <div class="overflow-x-auto max-h-56 overflow-y-auto border border-stone-200 rounded-lg">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-stone-100 text-stone-600 font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2">telemetry_id</th>
+                  <th class="p-2">sat_id</th>
+                  <th class="p-2">battery_pct</th>
+                  <th class="p-2">solar_voltage</th>
+                  <th class="p-2">temperature</th>
+                  <th class="p-2">recorded_at</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100 font-mono text-[11px]">
+                {% for t in telemetry %}
+                <tr>
+                  <td class="p-2 font-semibold">#{{ t['telemetry_id'] }}</td>
+                  <td class="p-2">SAT-{{ t['sat_id'] }}</td>
+                  <td class="p-2 text-emerald-700 font-semibold">{{ t['battery_pct'] }}%</td>
+                  <td class="p-2">{{ t['solar_voltage'] }}V</td>
+                  <td class="p-2">{{ t['temperature'] }}°C</td>
+                  <td class="p-2 text-stone-500">{{ t['recorded_at'] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transmission Queue Data -->
+        <div>
+          <h4 class="text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">Table: transmission_queue (All rows)</h4>
+          <div class="overflow-x-auto max-h-56 overflow-y-auto border border-stone-200 rounded-lg">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-stone-100 text-stone-600 font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2">packet_id</th>
+                  <th class="p-2">mode</th>
+                  <th class="p-2">payload_data</th>
+                  <th class="p-2">priority</th>
+                  <th class="p-2">status</th>
+                  <th class="p-2">created_at</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100 font-mono text-[11px]">
+                {% for q in transmissions %}
+                <tr>
+                  <td class="p-2 font-semibold">#{{ q['packet_id'] }}</td>
+                  <td class="p-2 font-semibold text-brand-700">{{ q['mode'] }}</td>
+                  <td class="p-2 text-stone-700">{{ q['payload_data'] }}</td>
+                  <td class="p-2">{{ q['priority'] }}</td>
+                  <td class="p-2">{{ q['status'] }}</td>
+                  <td class="p-2 text-stone-500">{{ q['created_at'] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-stone-200 mt-12">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center text-xs text-stone-500">
+      <p>SomaiyaSat Mission Control &middot; DBMS Schema Visualization</p>
+      <div class="space-x-4">
+        <a href="/" class="hover:text-stone-900 font-medium">Dashboard</a>
+        <a href="/database-view" class="hover:text-stone-900 font-medium">Schema Explorer</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

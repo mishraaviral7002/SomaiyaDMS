@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SomaiyaSat Mission Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              500: '#f97316',
+              600: '#ea580c', // Burnt Orange
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-stone-50 text-stone-900 min-h-screen font-sans antialiased flex flex-col">
+
+  <!-- Top Navigation -->
+  <nav class="bg-white border-b border-stone-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-8">
+        <a href="/" class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+            S
+          </div>
+          <div>
+            <span class="font-bold text-stone-900 tracking-tight text-base block leading-tight">SomaiyaSat</span>
+            <span class="text-xs text-stone-500 font-medium">Mission Control System</span>
+          </div>
+        </a>
+        <div class="hidden md:flex space-x-1">
+          <a href="/" class="px-3 py-1.5 text-sm font-semibold text-brand-700 bg-brand-50 rounded-md border border-brand-200">Operations</a>
+          <a href="/database-view" class="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors">Database Schema & Tables</a>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-semibold text-stone-700">Somaiya Vidyavihar University</p>
+          <p class="text-[11px] text-stone-400">DBMS Laboratory Project</p>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-8">
+
+    <!-- KPI / Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      {% for row in overview %}
+      <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+        <span class="text-xs font-semibold tracking-wider text-stone-400 uppercase">Satellite</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span class="text-2xl font-bold text-stone-900 font-mono">{{ row['callsign'] }}</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            {{ row['operational_status'] }}
+          </span>
+        </div>
+        <p class="text-xs text-stone-500 mt-2">SomaiyaSat-1 (PocketQube)</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+        <span class="text-xs font-semibold tracking-wider text-stone-400 uppercase">Deployer Status</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span class="text-2xl font-bold text-stone-900">{{ row['pod_name'] }}</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700 border border-brand-200">
+            {{ row['ejection_status'] }}
+          </span>
+        </div>
+        <p class="text-xs text-stone-500 mt-2">SomaiyaPod Separation Unit</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+        <span class="text-xs font-semibold tracking-wider text-stone-400 uppercase">Avg Battery Level</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span class="text-2xl font-bold text-stone-900 font-mono">{{ row['avg_battery_pct'] }}%</span>
+          <span class="text-xs text-stone-400 font-mono">AVG(battery)</span>
+        </div>
+        <p class="text-xs text-stone-500 mt-2">Calculated from telemetry logs</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+        <span class="text-xs font-semibold tracking-wider text-stone-400 uppercase">Telemetry Count</span>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span class="text-2xl font-bold text-stone-900 font-mono">{{ row['total_telemetry_reports'] }}</span>
+          <span class="text-xs text-stone-400 font-mono">COUNT(records)</span>
+        </div>
+        <p class="text-xs text-stone-500 mt-2">Stored TT&C packets</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Deployer Trigger Demonstration Section -->
+    <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-stone-100 gap-4">
+        <div>
+          <h2 class="text-base font-bold text-stone-900">SomaiyaPod Deployer Control</h2>
+          <p class="text-xs text-stone-500 mt-0.5">Database Trigger: Setting state to "Ejected" triggers satellite auto-transition to "Active".</p>
+        </div>
+      </div>
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-xs font-semibold text-stone-500 border-b border-stone-200 pb-2">
+              <th class="py-2.5 px-3">POD ID</th>
+              <th class="py-2.5 px-3">DEPLOYER UNIT</th>
+              <th class="py-2.5 px-3">CURRENT STATE</th>
+              <th class="py-2.5 px-3">TRIGGER TRANSITION</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-100">
+            {% for pod in deployers %}
+            <tr>
+              <td class="py-3 px-3 font-mono text-stone-600">POD-0{{ pod['deployer_id'] }}</td>
+              <td class="py-3 px-3 font-semibold text-stone-800">{{ pod['pod_name'] }}</td>
+              <td class="py-3 px-3">
+                <span class="inline-flex px-2.5 py-1 rounded text-xs font-semibold {% if pod['ejection_status'] == 'Ejected' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+                  {{ pod['ejection_status'] }}
+                </span>
+              </td>
+              <td class="py-3 px-3">
+                <form action="/deployer/update_status/{{ pod['deployer_id'] }}" method="POST" class="flex items-center space-x-2">
+                  <select name="ejection_status" class="bg-stone-50 border border-stone-300 rounded-md text-xs px-2.5 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-brand-600">
+                    <option value="Locked" {% if pod['ejection_status'] == 'Locked' %}selected{% endif %}>Locked</option>
+                    <option value="Armed" {% if pod['ejection_status'] == 'Armed' %}selected{% endif %}>Armed</option>
+                    <option value="Ejected" {% if pod['ejection_status'] == 'Ejected' %}selected{% endif %}>Ejected (Fire Trigger)</option>
+                  </select>
+                  <button type="submit" class="bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors">Update State</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Operations Split View (CRUD for Telemetry & Multi-Mode Transmission Queue) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- Module 1: Telemetry (TT&C) -->
+      <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col justify-between">
+        <div>
+          <div class="border-b border-stone-100 pb-3 mb-4">
+            <h3 class="text-base font-bold text-stone-900">Telemetry Log Management</h3>
+            <p class="text-xs text-stone-500">Insert real-time TT&C data (enforcing range check constraints).</p>
+          </div>
+
+          <!-- Add Form -->
+          <form action="/telemetry/create" method="POST" class="bg-stone-50 p-4 rounded-lg border border-stone-200 grid grid-cols-4 gap-3 mb-5">
+            <input type="hidden" name="sat_id" value="1">
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-600 mb-1">Battery (%)</label>
+              <input type="number" step="0.1" name="battery_pct" min="0" max="100" required placeholder="92.4" class="w-full bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-600 mb-1">Solar (V)</label>
+              <input type="number" step="0.1" name="solar_voltage" min="0" required placeholder="4.2" class="w-full bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-stone-600 mb-1">Temp (°C)</label>
+              <input type="number" step="0.1" name="temperature" required placeholder="18.5" class="w-full bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-2 rounded transition-colors shadow-sm">+ Record Log</button>
+            </div>
+          </form>
+
+          <!-- Records Table -->
+          <div class="overflow-x-auto max-h-80 overflow-y-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-stone-100 text-stone-600 font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2.5">Time</th>
+                  <th class="p-2.5">Battery</th>
+                  <th class="p-2.5">Solar</th>
+                  <th class="p-2.5">Temp</th>
+                  <th class="p-2.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100">
+                {% for log in telemetry %}
+                <tr class="hover:bg-stone-50 transition-colors">
+                  <td class="p-2.5 font-mono text-stone-500">{{ log['recorded_at'] }}</td>
+                  <td class="p-2.5 font-medium text-stone-800">{{ log['battery_pct'] }}%</td>
+                  <td class="p-2.5 text-stone-600">{{ log['solar_voltage'] }} V</td>
+                  <td class="p-2.5 text-stone-600">{{ log['temperature'] }} °C</td>
+                  <td class="p-2.5 text-right">
+                    <form action="/telemetry/delete/{{ log['telemetry_id'] }}" method="POST" class="inline">
+                      <button type="submit" class="text-red-600 hover:text-red-800 font-medium text-xs" onclick="return confirm('Delete this record?');">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 2: Multi-Mode Radio Transmission Queue -->
+      <div class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 flex flex-col justify-between">
+        <div>
+          <div class="border-b border-stone-100 pb-3 mb-4">
+            <h3 class="text-base font-bold text-stone-900">Multi-Mode Transmission Queue</h3>
+            <p class="text-xs text-stone-500">M17 Voice, Codec2 Voice, SSTV Image downlink scheduler.</p>
+          </div>
+
+          <!-- Add Queue Item Form -->
+          <form action="/transmission/create" method="POST" class="bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3 mb-5">
+            <input type="hidden" name="sat_id" value="1">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-stone-600 mb-1">Mode</label>
+                <select name="mode" class="w-full bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+                  <option value="M17 Voice">M17 Voice (4FSK Stream)</option>
+                  <option value="Codec2 Voice">Codec2 Voice (Low Bitrate)</option>
+                  <option value="SSTV Image">SSTV Image (Robot/Martin)</option>
+                  <option value="TT&C Beacon">TT&C Beacon</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-stone-600 mb-1">Priority</label>
+                <select name="priority" class="w-full bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" name="payload_data" required placeholder="Payload content (e.g. CQ CQ DE VU2SOM / image file)" class="flex-1 bg-white border border-stone-300 rounded px-2.5 py-1.5 text-xs text-stone-800 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+              <button type="submit" class="bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold px-4 py-2 rounded transition-colors shadow-sm">+ Queue</button>
+            </div>
+          </form>
+
+          <!-- Queue Table -->
+          <div class="overflow-x-auto max-h-80 overflow-y-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-stone-100 text-stone-600 font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2.5">Mode</th>
+                  <th class="p-2.5">Payload</th>
+                  <th class="p-2.5">Priority</th>
+                  <th class="p-2.5">Status</th>
+                  <th class="p-2.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100">
+                {% for item in transmissions %}
+                <tr class="hover:bg-stone-50 transition-colors">
+                  <td class="p-2.5 font-medium text-stone-800">{{ item['mode'] }}</td>
+                  <td class="p-2.5 truncate max-w-[130px] text-stone-600 font-mono text-[11px]" title="{{ item['payload_data'] }}">{{ item['payload_data'] }}</td>
+                  <td class="p-2.5">
+                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold
+                      {% if item['priority'] == 'Critical' %}bg-rose-50 text-rose-700 border border-rose-200
+                      {% elif item['priority'] == 'High' %}bg-amber-50 text-amber-700 border border-amber-200
+                      {% else %}bg-stone-100 text-stone-600 border border-stone-200{% endif %}">
+                      {{ item['priority'] }}
+                    </span>
+                  </td>
+                  <td class="p-2.5">
+                    <form action="/transmission/update_status/{{ item['packet_id'] }}" method="POST" class="inline">
+                      <select name="status" onchange="this.form.submit()" class="bg-stone-50 border border-stone-300 rounded px-2 py-1 text-[11px] text-stone-700">
+                        <option value="Pending" {% if item['status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Transmitted" {% if item['status'] == 'Transmitted' %}selected{% endif %}>Transmitted</option>
+                        <option value="Failed" {% if item['status'] == 'Failed' %}selected{% endif %}>Failed</option>
+                      </select>
+                    </form>
+                  </td>
+                  <td class="p-2.5 text-right">
+                    <form action="/transmission/delete/{{ item['packet_id'] }}" method="POST" class="inline">
+                      <button type="submit" class="text-red-600 hover:text-red-800 font-medium text-xs" onclick="return confirm('Delete transmission?');">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-stone-200 mt-12">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center text-xs text-stone-500">
+      <p>SomaiyaSat Mission Control &middot; PocketQube (1P) Autonomous Ground System</p>
+      <div class="space-x-4">
+        <a href="/" class="hover:text-stone-900 font-medium">Dashboard</a>
+        <a href="/database-view" class="hover:text-stone-900 font-medium">Schema Explorer</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
